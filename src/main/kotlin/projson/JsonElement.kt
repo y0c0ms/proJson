@@ -7,7 +7,7 @@ interface JsonElement {
 }
 
 // JsonPrimitive wraps a leaf JSON value: null, String, Number, or Boolean.
-class JsonPrimitive(val value: Any?) : JsonElement {
+data class JsonPrimitive(val value: Any?) : JsonElement {
 
     init {
         // require() throws IllegalArgumentException if the condition is false.
