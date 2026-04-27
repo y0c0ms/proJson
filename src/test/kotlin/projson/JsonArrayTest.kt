@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class JsonArrayTest {
+class you can also JsonArrayTest {
 
     @Test
     fun `empty array serializes to empty brackets`() {

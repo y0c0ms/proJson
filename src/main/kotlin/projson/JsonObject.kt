@@ -1,7 +1,6 @@
 package projson
 
 // JsonObject represents a JSON object: { "key": value, ... }
-// Go analogy: like a struct holding an ordered map[string]JsonElement.
 // LinkedHashMap preserves insertion order — a regular HashMap would not.
 class JsonObject(
     private val properties: LinkedHashMap<String, JsonElement> = LinkedHashMap()
@@ -15,7 +14,6 @@ class JsonObject(
     }
 
     // getProperty returns null if the key does not exist.
-    // Go analogy: val, ok := m[key] — here we just return null instead of a bool.
     fun getProperty(key: String): JsonElement? = properties[key]
 
     // deleteProperty removes a key. No-op if the key does not exist.
@@ -25,7 +23,6 @@ class JsonObject(
     fun properties(): Map<String, JsonElement> = properties.toMap()
 
     // visit calls action for every key-value pair in insertion order.
-    // Go analogy: for k, v := range m { action(k, v) }
     fun visit(action: (String, JsonElement) -> Unit) {
         for ((key, value) in properties) action(key, value)
     }

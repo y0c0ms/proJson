@@ -1,7 +1,6 @@
 package projson
 
 // JsonArray represents a JSON array: [elem1, elem2, ...]
-// Go analogy: like a struct wrapping a []JsonElement slice.
 class JsonArray(
     private val elements: MutableList<JsonElement> = mutableListOf()
 ) : JsonElement {
@@ -22,7 +21,6 @@ class JsonArray(
     fun elements(): List<JsonElement> = elements.toList()
 
     // visit calls action for every element with its index.
-    // Go analogy: for i, v := range slice { action(i, v) }
     fun visit(action: (Int, JsonElement) -> Unit) {
         elements.forEachIndexed { i, elem -> action(i, elem) }
     }
