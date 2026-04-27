@@ -37,8 +37,20 @@ class ProJson {
     }
 
     private fun objectToJsonObject(obj: Any): JsonObject {
-        throw UnsupportedOperationException(
-            "Reflection-based toJson not yet implemented for ${obj.javaClass.simpleName}"
-        )
+        val clazz = obj.javaClass
+        val jsonObj = JsonObject()
+
+        jsonObj.setProperty("\$type", JsonPrimitive(clazz.simpleName))
+
+        val fields = clazz.declaredFields
+            .filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) && !it.isSynthetic }
+
+        for (field in fields) {
+            field.isAccessible = true
+            val value = field.get(obj)
+            jsonObj.setProperty(field.name, toJson(value))
+        }
+
+        return jsonObj
     }
 }

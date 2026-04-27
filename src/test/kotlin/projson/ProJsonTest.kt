@@ -80,7 +80,7 @@ class ProJsonTest {
 
     // --- Reflection-based (data classes / regular classes) ---
 
-    // Test fixtures defined inside the test file — only visible in tests.
+    // Test fixtures defined inside the test file.
     data class Date(val day: Int, val month: Int, val year: Int)
     class Task(val description: String, val deadline: Date?, val dependencies: List<Task>)
 
