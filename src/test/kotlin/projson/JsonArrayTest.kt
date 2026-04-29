@@ -9,6 +9,7 @@ class JsonArrayTest {
     @Test
     fun `empty array serializes to empty brackets`() {
         val arr = JsonArray()
+        println("empty array -> ${arr.toJsonString()}")
         assertEquals("[]", arr.toJsonString())
     }
 
@@ -16,6 +17,7 @@ class JsonArrayTest {
     fun `add string element`() {
         val arr = JsonArray()
         arr.add("a")
+        println("string element -> ${arr.toJsonString()}")
         assertEquals("[\"a\"]", arr.toJsonString())
     }
 
@@ -23,6 +25,7 @@ class JsonArrayTest {
     fun `add null element`() {
         val arr = JsonArray()
         arr.add(null)
+        println("null element -> ${arr.toJsonString()}")
         assertEquals("[null]", arr.toJsonString())
     }
 
@@ -32,6 +35,7 @@ class JsonArrayTest {
         arr.add("a")
         arr.add(null)
         arr.add("b")
+        println("multiple elements -> ${arr.toJsonString()}")
         assertEquals("[\"a\", null, \"b\"]", arr.toJsonString())
     }
 
@@ -42,6 +46,7 @@ class JsonArrayTest {
         arr.add(null)
         arr.add("b")
         arr.add("c")
+        println("spec list example -> ${arr.toJsonString()}")
         assertEquals("[\"a\", null, \"b\", \"c\"]", arr.toJsonString())
     }
 
@@ -52,6 +57,7 @@ class JsonArrayTest {
         arr.add("b")
         arr.add("c")
         arr.remove(1)
+        println("after remove -> ${arr.toJsonString()}")
         assertEquals("[\"a\", \"c\"]", arr.toJsonString())
     }
 
@@ -59,6 +65,7 @@ class JsonArrayTest {
     fun `get by index`() {
         val arr = JsonArray()
         arr.add("hello")
+        println("get(0) -> ${arr.get(0)}")
         assertEquals(JsonPrimitive("hello"), arr.get(0))
     }
 
@@ -67,6 +74,7 @@ class JsonArrayTest {
         val arr = JsonArray()
         arr.add(1)
         arr.add(2)
+        println("size -> ${arr.size()}")
         assertEquals(2, arr.size())
     }
 
@@ -74,15 +82,17 @@ class JsonArrayTest {
     fun `toString delegates to toJsonString`() {
         val arr = JsonArray()
         arr.add(42)
+        println("toString -> $arr")
         assertEquals("[42]", arr.toString())
     }
 
     @Test
     fun `add complex type throws`() {
         val arr = JsonArray()
-        assertFailsWith<IllegalArgumentException> {
+        val ex = assertFailsWith<IllegalArgumentException> {
             arr.add(listOf(1, 2))
         }
+        println("complex type threw -> ${ex.message}")
     }
 
     @Test
@@ -92,6 +102,7 @@ class JsonArrayTest {
         inner.add(2)
         val outer = JsonArray()
         outer.add(inner)
+        println("nested -> ${outer.toJsonString()}")
         assertEquals("[[1, 2]]", outer.toJsonString())
     }
 
@@ -102,6 +113,7 @@ class JsonArrayTest {
         arr.add("y")
         val visited = mutableListOf<Int>()
         arr.visit { idx, _ -> visited.add(idx) }
+        println("visited indices -> $visited")
         assertEquals(listOf(0, 1), visited)
     }
 }

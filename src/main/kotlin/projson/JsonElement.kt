@@ -2,7 +2,9 @@ package projson
 
 // JsonElement is the common interface for all JSON node types.
 interface JsonElement {
+    //default 0 so both node.toJsonString() and node.toJsonString(2) are valid calls.
     fun toJsonString(indent: Int = 0): String
+    //override default function in kotlin
     override fun toString(): String
 }
 

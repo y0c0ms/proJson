@@ -15,6 +15,7 @@ class IntegrationTest {
         val json = ProJson().toJson(d) as JsonObject
         json.setProperty("year", 2027)
         val text = json.toJsonString()
+        println("spec Date example -> $text")
 
         assertEquals(true, text.contains("\"\$type\": \"Date\""))
         assertEquals(true, text.contains("\"day\": 31"))
@@ -27,6 +28,7 @@ class IntegrationTest {
         val list = listOf("a", null, "b")
         val json = ProJson().toJson(list) as JsonArray
         json.add("c")
+        println("spec list example -> ${json.toJsonString()}")
         assertEquals("[\"a\", null, \"b\", \"c\"]", json.toJsonString())
     }
 
@@ -38,6 +40,7 @@ class IntegrationTest {
         val all = listOf(t1, t2, t3)
 
         val json = ProJson().toJson(all) as JsonArray
+        println("three tasks -> ${json.toJsonString()}")
         assertEquals(3, json.size())
 
         val jt1 = json.get(0) as JsonObject

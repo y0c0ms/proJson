@@ -10,6 +10,7 @@ class JsonObjectTest {
     @Test
     fun `empty object serializes to empty braces`() {
         val obj = JsonObject()
+        println("empty object -> ${obj.toJsonString()}")
         assertEquals("{}", obj.toJsonString())
     }
 
@@ -17,6 +18,7 @@ class JsonObjectTest {
     fun `setProperty with string value`() {
         val obj = JsonObject()
         obj.setProperty("name", "Alice")
+        println("string property -> ${obj.toJsonString()}")
         assertEquals("{\"name\": \"Alice\"}", obj.toJsonString())
     }
 
@@ -24,6 +26,7 @@ class JsonObjectTest {
     fun `setProperty with int value`() {
         val obj = JsonObject()
         obj.setProperty("age", 30)
+        println("int property -> ${obj.toJsonString()}")
         assertEquals("{\"age\": 30}", obj.toJsonString())
     }
 
@@ -31,16 +34,17 @@ class JsonObjectTest {
     fun `setProperty with null value`() {
         val obj = JsonObject()
         obj.setProperty("x", null)
+        println("null property -> ${obj.toJsonString()}")
         assertEquals("{\"x\": null}", obj.toJsonString())
     }
 
     @Test
-
     // Guarantee that if setProperty is called 2 times the value is replaced
     fun `setProperty overwrites existing key`() {
         val obj = JsonObject()
         obj.setProperty("year", 2026)
         obj.setProperty("year", 2027)
+        println("overwrite -> ${obj.toJsonString()}")
         assertEquals("{\"year\": 2027}", obj.toJsonString())
     }
 
@@ -48,12 +52,14 @@ class JsonObjectTest {
     fun `getProperty returns value`() {
         val obj = JsonObject()
         obj.setProperty("k", "v")
+        println("get k -> ${obj.getProperty("k")}")
         assertEquals(JsonPrimitive("v"), obj.getProperty("k"))
     }
 
     @Test
     fun `getProperty returns null for missing key`() {
         val obj = JsonObject()
+        println("get missing -> ${obj.getProperty("missing")}")
         assertNull(obj.getProperty("missing"))
     }
 
@@ -62,6 +68,7 @@ class JsonObjectTest {
         val obj = JsonObject()
         obj.setProperty("a", 1)
         obj.deleteProperty("a")
+        println("after delete -> ${obj.toJsonString()}")
         assertNull(obj.getProperty("a"))
         assertEquals("{}", obj.toJsonString())
     }
@@ -70,15 +77,17 @@ class JsonObjectTest {
     fun `setProperty accepts existing JsonElement`() {
         val obj = JsonObject()
         obj.setProperty("flag", JsonPrimitive(true))
+        println("existing element -> ${obj.toJsonString()}")
         assertEquals("{\"flag\": true}", obj.toJsonString())
     }
 
     @Test
     fun `setProperty with complex type throws`() {
         val obj = JsonObject()
-        assertFailsWith<IllegalArgumentException> {
+        val ex = assertFailsWith<IllegalArgumentException> {
             obj.setProperty("bad", listOf(1, 2, 3))
         }
+        println("complex type threw -> ${ex.message}")
     }
 
     @Test
@@ -87,6 +96,7 @@ class JsonObjectTest {
         obj.setProperty("a", 1)
         obj.setProperty("b", 2)
         obj.setProperty("c", 3)
+        println("insertion order -> ${obj.toJsonString()}")
         assertEquals("{\"a\": 1, \"b\": 2, \"c\": 3}", obj.toJsonString())
     }
 
@@ -94,6 +104,7 @@ class JsonObjectTest {
     fun `toString delegates to toJsonString`() {
         val obj = JsonObject()
         obj.setProperty("x", 1)
+        println("toString -> $obj")
         assertEquals("{\"x\": 1}", obj.toString())
     }
 
@@ -103,6 +114,7 @@ class JsonObjectTest {
         inner.setProperty("day", 31)
         val outer = JsonObject()
         outer.setProperty("date", inner)
+        println("nested -> ${outer.toJsonString()}")
         assertEquals("{\"date\": {\"day\": 31}}", outer.toJsonString())
     }
 
@@ -113,6 +125,7 @@ class JsonObjectTest {
         obj.setProperty("y", 2)
         val visited = mutableListOf<String>()
         obj.visit { key, _ -> visited.add(key) }
+        println("visited keys -> $visited")
         assertEquals(listOf("x", "y"), visited)
     }
 }

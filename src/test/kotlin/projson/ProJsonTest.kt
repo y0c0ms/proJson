@@ -13,6 +13,7 @@ class ProJsonTest {
     @Test
     fun `null becomes JsonPrimitive null`() {
         val result = pj.toJson(null)
+        println("toJson(null) -> ${result.toJsonString()}")
         assertIs<JsonPrimitive>(result)
         assertEquals("null", result.toJsonString())
     }
@@ -20,18 +21,21 @@ class ProJsonTest {
     @Test
     fun `string becomes JsonPrimitive`() {
         val result = pj.toJson("hello")
+        println("toJson(string) -> ${result.toJsonString()}")
         assertEquals("\"hello\"", result.toJsonString())
     }
 
     @Test
     fun `int becomes JsonPrimitive`() {
         val result = pj.toJson(42)
+        println("toJson(int) -> ${result.toJsonString()}")
         assertEquals("42", result.toJsonString())
     }
 
     @Test
     fun `boolean becomes JsonPrimitive`() {
         val result = pj.toJson(false)
+        println("toJson(boolean) -> ${result.toJsonString()}")
         assertEquals("false", result.toJsonString())
     }
 
@@ -40,6 +44,7 @@ class ProJsonTest {
     @Test
     fun `map becomes JsonObject without type property`() {
         val result = pj.toJson(mapOf("a" to 1, "b" to "x")) as JsonObject
+        println("toJson(map) -> ${result.toJsonString()}")
         // maps have no $type
         assertEquals(null, result.getProperty("\$type"))
         assertEquals(JsonPrimitive(1), result.getProperty("a"))
@@ -51,30 +56,35 @@ class ProJsonTest {
     @Test
     fun `list becomes JsonArray`() {
         val result = pj.toJson(listOf("a", null, "b")) as JsonArray
+        println("toJson(list) -> ${result.toJsonString()}")
         assertEquals("[\"a\", null, \"b\"]", result.toJsonString())
     }
 
     @Test
     fun `empty list becomes empty JsonArray`() {
         val result = pj.toJson(emptyList<Any>()) as JsonArray
+        println("toJson(empty list) -> ${result.toJsonString()}")
         assertEquals("[]", result.toJsonString())
     }
 
     @Test
     fun `set becomes JsonArray`() {
         val result = pj.toJson(setOf(1)) as JsonArray
+        println("toJson(set) -> ${result.toJsonString()}")
         assertEquals("[1]", result.toJsonString())
     }
 
     @Test
     fun `array becomes JsonArray`() {
         val result = pj.toJson(arrayOf("x", "y")) as JsonArray
+        println("toJson(array) -> ${result.toJsonString()}")
         assertEquals("[\"x\", \"y\"]", result.toJsonString())
     }
 
     @Test
     fun `nested list becomes nested JsonArray`() {
         val result = pj.toJson(listOf(listOf(1, 2), listOf(3))) as JsonArray
+        println("toJson(nested list) -> ${result.toJsonString()}")
         assertEquals("[[1, 2], [3]]", result.toJsonString())
     }
 
@@ -88,6 +98,7 @@ class ProJsonTest {
     fun `data class becomes JsonObject with type`() {
         val d = Date(31, 4, 2026)
         val result = pj.toJson(d) as JsonObject
+        println("toJson(Date) -> ${result.toJsonString()}")
         assertEquals(JsonPrimitive("Date"), result.getProperty("\$type"))
         assertEquals(JsonPrimitive(31), result.getProperty("day"))
         assertEquals(JsonPrimitive(4), result.getProperty("month"))
@@ -99,6 +110,7 @@ class ProJsonTest {
         val d = Date(31, 4, 2026)
         val json = pj.toJson(d)
         val text = json.toJsonString()
+        println("Date as text -> $text")
         assertEquals(true, text.contains("\"\$type\": \"Date\""))
         assertEquals(true, text.contains("\"day\": 31"))
     }
@@ -107,6 +119,7 @@ class ProJsonTest {
     fun `null property becomes JsonPrimitive null`() {
         val t = Task("T1", null, emptyList())
         val result = pj.toJson(t) as JsonObject
+        println("Task with null deadline -> ${result.toJsonString()}")
         assertEquals(JsonPrimitive(null), result.getProperty("deadline"))
     }
 
@@ -115,6 +128,7 @@ class ProJsonTest {
         val t = Task("T1", null, emptyList())
         val result = pj.toJson(t) as JsonObject
         val deps = result.getProperty("dependencies")
+        println("Task dependencies -> ${(deps as JsonArray).toJsonString()}")
         assertIs<JsonArray>(deps)
         assertEquals("[]", deps.toJsonString())
     }
@@ -123,6 +137,7 @@ class ProJsonTest {
     fun `nested object property becomes nested JsonObject`() {
         val t = Task("T1", Date(30, 2, 2026), emptyList())
         val result = pj.toJson(t) as JsonObject
+        println("Task with deadline -> ${result.toJsonString()}")
         val deadline = result.getProperty("deadline")
         assertIs<JsonObject>(deadline)
         assertEquals(JsonPrimitive("Date"), deadline.getProperty("\$type"))
@@ -133,6 +148,7 @@ class ProJsonTest {
         val d = Date(31, 4, 2026)
         val json = pj.toJson(d) as JsonObject
         json.setProperty("year", 2027)
+        println("Date with year overridden -> ${json.toJsonString()}")
         assertEquals(JsonPrimitive(2027), json.getProperty("year"))
     }
 
@@ -143,6 +159,7 @@ class ProJsonTest {
         val t3 = Task("T3", null, listOf(t1, t2))
         val all = listOf(t1, t2, t3)
         val result = pj.toJson(all) as JsonArray
+        println("list of Tasks -> ${result.toJsonString()}")
         assertEquals(3, result.size())
         assertIs<JsonObject>(result.get(0))
         assertIs<JsonObject>(result.get(2))

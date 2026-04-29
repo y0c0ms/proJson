@@ -5,11 +5,11 @@ class ProJson {
 
     // toJson converts any Kotlin value to the corresponding JsonElement.
     // Decision tree:
-    //   null           → JsonPrimitive(null)
-    //   String/Number/Boolean → JsonPrimitive
-    //   Map            → JsonObject (no $type)
-    //   Collection/Array → JsonArray
-    //   anything else  → JsonObject with $type (via reflection, added in Task 7)
+    //   null           > JsonPrimitive(null)
+    //   String/Number/Boolean > JsonPrimitive
+    //   Map            > JsonObject (no $type)
+    //   Collection/Array > JsonArray
+    //   anything else  > JsonObject with $type (via reflection)
     fun toJson(obj: Any?): JsonElement {
         if (obj == null) return JsonPrimitive(null)
         if (obj is String || obj is Number || obj is Boolean) return JsonPrimitive(obj)
