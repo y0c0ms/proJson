@@ -16,6 +16,11 @@ class ProJson {
         if (obj is Map<*, *>) return mapToJsonObject(obj)
         if (obj is Collection<*>) return collectionToJsonArray(obj)
         if (obj is Array<*>) return collectionToJsonArray(obj.toList())
+        val jsonStringAnn = obj.javaClass.getAnnotation(JsonString::class.java)
+        if (jsonStringAnn != null) {
+            val serializer = jsonStringAnn.serializer.java.getDeclaredConstructor().newInstance()
+            return JsonPrimitive(serializer.serialize(obj))
+        }
         return objectToJsonObject(obj)
     }
 
@@ -45,9 +50,11 @@ class ProJson {
             .filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) && !it.isSynthetic }
 
         for (field in fields) {
+            if (field.isAnnotationPresent(JsonIgnore::class.java)) continue
             field.isAccessible = true
             val value = field.get(obj)
-            jsonObj.setProperty(field.name, toJson(value))
+            val key = field.getAnnotation(JsonProperty::class.java)?.name ?: field.name
+            jsonObj.setProperty(key, toJson(value))
         }
 
         return jsonObj
