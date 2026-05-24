@@ -17,13 +17,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # build-mode "none" scans the source directly, so no JDK or build step
-      # is needed. Supported for the java-kotlin language pack.
+      # Kotlin must be compiled for CodeQL to analyze it, so we set up the
+      # JDK and let CodeQL autobuild the project (runs Gradle).
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '23'
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          build-mode: none
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4
