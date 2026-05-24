@@ -50,6 +50,6 @@ class IntegrationTest {
 
         val deps = jt3.getProperty("dependencies") as JsonArray
         assertEquals(2, deps.size())
-        assertIs<JsonObject>(deps.get(0))
+        assertIs<JsonReference>(deps.get(0))
     }
 }

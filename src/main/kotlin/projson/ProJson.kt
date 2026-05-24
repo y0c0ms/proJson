@@ -1,15 +1,14 @@
 package projson
 
-// ProJson is the main entry point for converting Kotlin values to JSON.
+import java.util.IdentityHashMap
+import java.util.UUID
+
+// One instance = one serialisation session. The registry tracks every
+// regular-class object seen so far, keyed by reference (not equals).
 class ProJson {
 
-    // toJson converts any Kotlin value to the corresponding JsonElement.
-    // Decision tree:
-    //   null           > JsonPrimitive(null)
-    //   String/Number/Boolean > JsonPrimitive
-    //   Map            > JsonObject (no $type)
-    //   Collection/Array > JsonArray
-    //   anything else  > JsonObject with $type (via reflection)
+    private val registry = IdentityHashMap<Any, String>()
+
     fun toJson(obj: Any?): JsonElement {
         if (obj == null) return JsonPrimitive(null)
         if (obj is String || obj is Number || obj is Boolean) return JsonPrimitive(obj)
@@ -26,23 +25,33 @@ class ProJson {
 
     private fun mapToJsonObject(map: Map<*, *>): JsonObject {
         val jsonObj = JsonObject()
-        for ((k, v) in map) {
-            jsonObj.setProperty(k.toString(), toJson(v))
-        }
+        for ((k, v) in map) jsonObj.setProperty(k.toString(), toJson(v))
         return jsonObj
     }
 
     private fun collectionToJsonArray(collection: Collection<*>): JsonArray {
         val arr = JsonArray()
-        for (item in collection) {
-            arr.add(toJson(item))
-        }
+        for (item in collection) arr.add(toJson(item))
         return arr
     }
 
-    private fun objectToJsonObject(obj: Any): JsonObject {
+    // Data classes always have a compiler-generated copy() method; regular classes never do.
+    private fun isDataClass(clazz: Class<*>): Boolean =
+        clazz.declaredMethods.any { it.name == "copy" }
+
+    private fun objectToJsonObject(obj: Any): JsonElement {
         val clazz = obj.javaClass
         val jsonObj = JsonObject()
+
+        if (!isDataClass(clazz)) {
+            // Already seen — emit $ref instead of inlining again.
+            registry[obj]?.let { return JsonReference(it) }
+
+            val uuid = UUID.randomUUID().toString()
+            registry[obj] = uuid
+            // $id must be the first property.
+            jsonObj.setProperty("\$id", JsonPrimitive(uuid))
+        }
 
         jsonObj.setProperty("\$type", JsonPrimitive(clazz.simpleName))
 
@@ -54,9 +63,27 @@ class ProJson {
             field.isAccessible = true
             val value = field.get(obj)
             val key = field.getAnnotation(JsonProperty::class.java)?.name ?: field.name
-            jsonObj.setProperty(key, toJson(value))
+
+            if (field.isAnnotationPresent(Reference::class.java)) {
+                jsonObj.setProperty(key, toRefOrObject(value))
+            } else {
+                jsonObj.setProperty(key, toJson(value))
+            }
         }
 
         return jsonObj
+    }
+
+    // Used for @Reference fields: emits $ref if already registered,
+    // otherwise serialises fully (which registers the object).
+    private fun toRefOrObject(value: Any?): JsonElement {
+        if (value == null) return JsonPrimitive(null)
+        if (value is Collection<*>) {
+            val arr = JsonArray()
+            for (item in value) arr.add(toRefOrObject(item))
+            return arr
+        }
+        registry[value]?.let { return JsonReference(it) }
+        return objectToJsonObject(value)
     }
 }
