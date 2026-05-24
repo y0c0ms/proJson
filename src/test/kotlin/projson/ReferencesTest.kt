@@ -31,16 +31,18 @@ class ReferencesTest {
         assertNotNull(json.getProperty("\$id"))
     }
 
-    // ── Test 2: same object twice — second is $ref ────────────────────────────
+    // ── Test 2: same object in @Reference field emits $ref ───────────────────
 
     @Test
-    fun `same object appearing twice second occurrence is $ref`() {
-        val t = Task("T1", null)
-        val json = ProJson().toJson(listOf(t, t)) as JsonArray
-        val first = json.get(0) as JsonObject
-        val second = json.get(1) as JsonReference
-        val uuid = (first.getProperty("\$id") as JsonPrimitive).value as String
-        assertEquals(uuid, second.id)
+    fun `same object in @Reference field emits $ref`() {
+        val t1 = Task("T1", null)
+        val t3 = Task("T3", null, listOf(t1))
+        val json = ProJson().toJson(listOf(t1, t3)) as JsonArray
+        val j1 = json.get(0) as JsonObject
+        val j3 = json.get(1) as JsonObject
+        val uuid = (j1.getProperty("\$id") as JsonPrimitive).value as String
+        val deps = j3.getProperty("dependencies") as JsonArray
+        assertEquals(uuid, (deps.get(0) as JsonReference).id)
     }
 
     // ── Test 3: @Reference field emits $ref ───────────────────────────────────
@@ -67,7 +69,23 @@ class ReferencesTest {
         assertNull(json.getProperty("\$id"))
     }
 
-    // ── Test 5: circular reference does not overflow ──────────────────────────
+    // ── Test 5: @Reference field with unseen object inlines it with $id ─────────
+
+    @Test
+    fun `@Reference field inlines object with $id when not previously seen`() {
+        val t1 = Task("T1", null)
+        val t3 = Task("T3", null, listOf(t1))
+        // Only t3 is in the top-level list — t1 is only reachable via @Reference
+        val json = ProJson().toJson(listOf(t3)) as JsonArray
+        val j3 = json.get(0) as JsonObject
+        val deps = j3.getProperty("dependencies") as JsonArray
+        // t1 was never seen before, so it must be inlined (not a $ref)
+        val dep = deps.get(0) as JsonObject
+        assertNotNull(dep.getProperty("\$id"))
+        assertEquals(JsonPrimitive("T1"), dep.getProperty("description"))
+    }
+
+    // ── Test 6: circular reference does not overflow ──────────────────────────
 
     @Test
     fun `circular reference does not cause StackOverflowError`() {

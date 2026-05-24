@@ -44,13 +44,13 @@ class ProJson {
         val jsonObj = JsonObject()
 
         if (!isDataClass(clazz)) {
-            // Already seen — emit $ref instead of inlining again.
-            registry[obj]?.let { return JsonReference(it) }
-
-            val uuid = UUID.randomUUID().toString()
-            registry[obj] = uuid
-            // $id must be the first property.
-            jsonObj.setProperty("\$id", JsonPrimitive(uuid))
+            // First encounter: register a UUID and emit $id.
+            // $ref is only emitted by toRefOrObject, which is called for @Reference fields.
+            if (!registry.containsKey(obj)) {
+                val uuid = UUID.randomUUID().toString()
+                registry[obj] = uuid
+            }
+            jsonObj.setProperty("\$id", JsonPrimitive(registry[obj]!!))
         }
 
         jsonObj.setProperty("\$type", JsonPrimitive(clazz.simpleName))

@@ -1,6 +1,6 @@
 package projson
 
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
@@ -50,6 +50,6 @@ class IntegrationTest {
 
         val deps = jt3.getProperty("dependencies") as JsonArray
         assertEquals(2, deps.size())
-        assertIs<JsonReference>(deps.get(0))
+        assertIs<JsonObject>(deps.get(0))
     }
 }
