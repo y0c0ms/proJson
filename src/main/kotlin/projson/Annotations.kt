@@ -55,3 +55,22 @@ annotation class JsonString(val serializer: KClass<out JsonStringSerializer>)
 interface JsonStringSerializer {
     fun serialize(obj: Any): String
 }
+
+/**
+ * Marks a field whose value should be emitted as a JSON reference (`{"$ref": "<uuid>"}`)
+ * instead of being inlined. The target object is registered with a `$id` on first encounter;
+ * subsequent encounters emit `$ref` pointing to that id.
+ *
+ * Only meaningful on fields of regular (non-data) classes serialised by [ProJson].
+ *
+ * Example:
+ * ```
+ * class Task(
+ *     val description: String,
+ *     @Reference val dependencies: List<Task>
+ * )
+ * ```
+ */
+@Target(AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Reference
