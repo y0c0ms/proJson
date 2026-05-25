@@ -75,7 +75,7 @@ class ReferencesTest {
     fun `@Reference field inlines object with $id when not previously seen`() {
         val t1 = Task("T1", null)
         val t3 = Task("T3", null, listOf(t1))
-        // Only t3 is in the top-level list — t1 is only reachable via @Reference
+        // Only t3 is in the top-level list; t1 is only reachable via @Reference
         val json = ProJson().toJson(listOf(t3)) as JsonArray
         val j3 = json.get(0) as JsonObject
         val deps = j3.getProperty("dependencies") as JsonArray

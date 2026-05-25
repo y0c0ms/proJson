@@ -3,12 +3,25 @@ package projson
 import java.util.IdentityHashMap
 import java.util.UUID
 
-// One instance = one serialisation session. The registry tracks every
-// regular-class object seen so far, keyed by reference (not equals).
+/**
+ * Converts Kotlin objects into the [JsonElement] model. One instance is one serialization
+ * session: the registry holds every regular-class object already written, keyed by
+ * identity, so a repeated object can be written as a [JsonReference].
+ */
 class ProJson {
 
     private val registry = IdentityHashMap<Any, String>()
 
+    /**
+     * Converts [obj] to a [JsonElement].
+     *
+     * - `null`, [String], [Number], [Boolean]: a [JsonPrimitive].
+     * - [Map]: a [JsonObject] with no `$type`.
+     * - [Collection] or array: a [JsonArray].
+     * - a class annotated with [JsonString]: a string [JsonPrimitive].
+     * - any other object: a [JsonObject] with a `$type`, plus a `$id` when it is not a
+     *   data class.
+     */
     fun toJson(obj: Any?): JsonElement {
         if (obj == null) return JsonPrimitive(null)
         if (obj is String || obj is Number || obj is Boolean) return JsonPrimitive(obj)

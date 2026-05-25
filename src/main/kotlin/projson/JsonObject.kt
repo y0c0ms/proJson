@@ -1,28 +1,33 @@
 package projson
 
-// JsonObject represents a JSON object: { "key": value, ... }
-// LinkedHashMap preserves insertion order — a regular HashMap would not.
+/**
+ * A JSON object: `{"key": value, ...}`. Keys are kept in insertion order by the backing
+ * [LinkedHashMap], so the printed order matches the order of [setProperty] calls.
+ */
 class JsonObject(
     private val properties: LinkedHashMap<String, JsonElement> = LinkedHashMap()
 ) : JsonElement {
 
-    // setProperty adds or overwrites a key.
-    // Accepts null, String, Number, Boolean, or an existing JsonElement.
-    // For data classes or complex objects, convert with ProJson().toJson() first.
+    /**
+     * Adds [key], or overwrites it if present. [value] may be `null`, a [String], a
+     * [Number], a [Boolean], or an existing [JsonElement]; other types throw
+     * [IllegalArgumentException]. For a data class or other object, convert it with
+     * [ProJson.toJson] first.
+     */
     fun setProperty(key: String, value: Any?) {
         properties[key] = wrap(value)
     }
 
-    // getProperty returns null if the key does not exist.
+    /** Returns the value for [key], or `null` if the key is absent. */
     fun getProperty(key: String): JsonElement? = properties[key]
 
-    // deleteProperty removes a key. No-op if the key does not exist.
+    /** Removes [key]. Does nothing if the key is absent. */
     fun deleteProperty(key: String) { properties.remove(key) }
 
-    // properties returns a read-only snapshot of all entries.
+    /** Returns a read-only copy of all entries. */
     fun properties(): Map<String, JsonElement> = properties.toMap()
 
-    // visit calls action for every key-value pair in insertion order.
+    /** Calls [action] for every key/value pair, in insertion order. */
     fun visit(action: (String, JsonElement) -> Unit) {
         for ((key, value) in properties) action(key, value)
     }

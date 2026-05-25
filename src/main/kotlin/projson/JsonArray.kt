@@ -1,26 +1,31 @@
 package projson
 
-// JsonArray represents a JSON array: [elem1, elem2, ...]
+/**
+ * A JSON array: `[elem1, elem2, ...]`. Elements keep the order in which they were added.
+ */
 class JsonArray(
     private val elements: MutableList<JsonElement> = mutableListOf()
 ) : JsonElement {
 
-    // add appends an element. Accepts null, String, Number, Boolean, or JsonElement.
+    /**
+     * Appends [value]. It may be `null`, a [String], a [Number], a [Boolean], or an
+     * existing [JsonElement]; other types throw [IllegalArgumentException].
+     */
     fun add(value: Any?) { elements.add(wrap(value)) }
 
-    // remove deletes the element at the given index (0-based).
+    /** Removes the element at [index] (zero-based). */
     fun remove(index: Int) { elements.removeAt(index) }
 
-    // get returns the element at the given index.
+    /** Returns the element at [index] (zero-based). */
     fun get(index: Int): JsonElement = elements[index]
 
-    // size returns the number of elements.
+    /** Returns the number of elements. */
     fun size(): Int = elements.size
 
-    // elements returns a read-only snapshot.
+    /** Returns a read-only copy of the elements. */
     fun elements(): List<JsonElement> = elements.toList()
 
-    // visit calls action for every element with its index.
+    /** Calls [action] for each element with its index, in order. */
     fun visit(action: (Int, JsonElement) -> Unit) {
         elements.forEachIndexed { i, elem -> action(i, elem) }
     }

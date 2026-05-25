@@ -1,14 +1,24 @@
 package projson
 
-// JsonElement is the common interface for all JSON node types.
+/**
+ * Common interface for every JSON node: [JsonPrimitive], [JsonObject], [JsonArray], and
+ * [JsonReference].
+ */
 interface JsonElement {
-    //default 0 so both node.toJsonString() and node.toJsonString(2) are valid calls.
+    /**
+     * Returns the JSON text for this node. [indent] is accepted for API symmetry; the
+     * output is compact and does not change with it.
+     */
     fun toJsonString(indent: Int = 0): String
-    //override default function in kotlin
+
+    /** Returns the same text as [toJsonString]. */
     override fun toString(): String
 }
 
-// JsonPrimitive wraps a leaf JSON value: null, String, Number, or Boolean.
+/**
+ * A leaf JSON value: `null`, a [String], a [Number], or a [Boolean]. The constructor
+ * throws [IllegalArgumentException] for any other type. Strings are escaped when printed.
+ */
 data class JsonPrimitive(val value: Any?) : JsonElement {
 
     init {
@@ -21,7 +31,7 @@ data class JsonPrimitive(val value: Any?) : JsonElement {
     override fun toJsonString(indent: Int): String = when (value) {
         null      -> "null"
         is String  -> "\"${escapeString(value)}\""
-        is Boolean -> value.toString()  // Boolean checked before Number — in Kotlin, Boolean is NOT a subtype of Number
+        is Boolean -> value.toString()  // Boolean checked before Number; in Kotlin, Boolean is NOT a subtype of Number
         is Number  -> value.toString()
         else       -> throw IllegalStateException("unreachable")
     }
@@ -36,9 +46,12 @@ data class JsonPrimitive(val value: Any?) : JsonElement {
         .replace("\t", "\\t")
 }
 
-// wrap() converts a raw Kotlin value into a JsonElement.
-// Used internally by JsonObject and JsonArray so callers don't have to type JsonPrimitive(x) manually.
-// For complex objects (data classes etc.), use ProJson().toJson() instead.
+/**
+ * Wraps a raw Kotlin value as a [JsonElement]. Accepts an existing [JsonElement], `null`,
+ * [String], [Number], or [Boolean], and throws [IllegalArgumentException] for anything
+ * else. Used by [JsonObject.setProperty] and [JsonArray.add]. For arbitrary objects use
+ * [ProJson.toJson].
+ */
 internal fun wrap(value: Any?): JsonElement = when (value) {
     is JsonElement -> value
     null           -> JsonPrimitive(null)
