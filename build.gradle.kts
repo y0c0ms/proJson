@@ -3,7 +3,8 @@ plugins {
 }
 
 group = "proJson"
-version = "1.0-SNAPSHOT"
+// CI passes -PreleaseVersion=<tag> on a release build; falls back to SNAPSHOT locally.
+version = (findProperty("releaseVersion") as String?) ?: "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
