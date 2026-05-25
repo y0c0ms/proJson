@@ -1,122 +1,191 @@
 # ProJson
 
-ProJson is a small JSON library for Kotlin. It has two parts: an in-memory model that
-represents a JSON document as a tree of objects, and a serializer that turns ordinary
-Kotlin objects into that tree using reflection. It only depends on the Java standard
-library, with JUnit 5 used for the tests.
+ProJson is a JSON library for Kotlin with no external dependencies (JUnit 5 is used only
+for the tests). It has two parts:
 
-## What it does
+- an in-memory model, where a JSON document is a tree of `JsonElement` nodes;
+- a serializer, `ProJson`, that turns a Kotlin object into that tree using reflection.
 
-You can work with JSON in two ways. The first is to build the tree by hand using the
-model classes (`JsonObject`, `JsonArray`, `JsonPrimitive`). The second is to hand any
-Kotlin object to `ProJson().toJson(...)` and let it walk the object's fields with
-reflection and produce the tree for you. Either way, calling `toJsonString()` on the
-result gives you the JSON text.
+Call `toJsonString()` on any node to get the JSON text. This document shows each public
+call and the exact text it produces.
 
-The serializer also understands a few annotations so you can control the output, and it
-can replace repeated objects with references instead of writing them out more than once.
+## Building and running
 
-## Architecture
+The project uses the Gradle wrapper, so no local Gradle install is needed.
 
-![ProJson package diagram](projson-diagram.svg)
-
-The model is built around the `JsonElement` interface. `JsonPrimitive`, `JsonObject`,
-`JsonArray` and `JsonReference` all implement it, so any node can be printed with
-`toJsonString()`. `ProJson` is the entry point that produces those elements from Kotlin
-objects, and the annotations let you adjust how a class is serialized.
-
-## Quick start
-
-```kotlin
-val json = ProJson().toJson(myObject)
-println(json.toJsonString())
+```
+./gradlew build     # compile and run the tests
+./gradlew test      # run the tests only
+./gradlew jar       # build the library JAR into build/libs
 ```
 
-You can also build a document by hand without any reflection:
+## Building a document by hand
+
+`JsonObject` holds keys in the order you insert them. `setProperty` adds or overwrites a
+key, `getProperty` returns a node or `null`, `deleteProperty` removes a key, and `visit`
+walks each entry.
 
 ```kotlin
 val obj = JsonObject()
 obj.setProperty("name", "Alice")
 obj.setProperty("age", 30)
-println(obj.toJsonString())   // {"name": "Alice", "age": 30}
+obj.getProperty("name")        // JsonPrimitive("Alice")
+obj.deleteProperty("age")
+println(obj.toJsonString())    // {"name": "Alice"}
 ```
 
-## A worked example
+`JsonArray` holds an ordered list. It has `add`, `remove(index)`, `get(index)`, `size`,
+and `visit`.
 
-Take a couple of classes like the ones from the project brief:
+```kotlin
+val arr = JsonArray()
+arr.add("a")
+arr.add(null)
+arr.add(true)
+println(arr.toJsonString())    // ["a", null, true]
+println(arr.size())            // 3
+arr.remove(1)
+println(arr.toJsonString())    // ["a", true]
+```
+
+`setProperty` and `add` accept `null`, a `String`, a `Number`, a `Boolean`, or an
+existing `JsonElement`. Passing any other type throws `IllegalArgumentException`, so a
+half-built document cannot hold a value that has no JSON form. `JsonPrimitive` escapes
+quotes, backslashes, and control characters when it prints.
+
+## Generating JSON from an object
+
+`ProJson().toJson(value)` returns a `JsonElement`. The shape depends on the value:
+
+- a `String`, `Number`, `Boolean`, or `null` becomes a `JsonPrimitive`;
+- a `Map` becomes a `JsonObject` with no `$type`;
+- a `Collection` or array becomes a `JsonArray`;
+- any other object becomes a `JsonObject` built from its declared fields.
+
+```kotlin
+val m = mapOf("x" to 1, "y" to 2)
+println(ProJson().toJson(m).toJsonString())   // {"x": 1, "y": 2}
+
+val list = listOf("a", null, "b")
+val arr = ProJson().toJson(list) as JsonArray
+arr.add("c")
+println(arr.toJsonString())                   // ["a", null, "b", "c"]
+```
+
+For a plain object, ProJson writes a `$type` field with the class name. A regular class
+also gets a `$id` field holding a generated UUID; a data class does not, because a data
+class stands for a value. ProJson tells them apart by looking for the `copy` method that
+the Kotlin compiler generates only for data classes.
 
 ```kotlin
 data class Date(val day: Int, val month: Int, val year: Int)
 class Task(val description: String, val deadline: Date?, val dependencies: List<Task>)
-```
 
-Serializing a task:
-
-```kotlin
 val t1 = Task("T1", Date(1, 1, 2026), emptyList())
 println(ProJson().toJson(t1).toJsonString())
 ```
-
-prints:
 
 ```json
 {"$id": "341227df-04f0-4252-9375-e00256ed3e27", "$type": "Task", "description": "T1", "deadline": {"$type": "Date", "day": 1, "month": 1, "year": 2026}, "dependencies": []}
 ```
 
-The `$id` is a UUID created the first time an object is written, so its value is different
-on every run. `Task` is a regular class, which is why it gets an `$id`, while `Date` is a
-data class and only gets a `$type`. That difference is explained below.
+`Task` is a regular class and gets a `$id`; `Date` is a data class and gets only a
+`$type`. The `$id` is a fresh UUID each run, so its value changes between runs.
 
-## Features and API
+## Changing the output with annotations
 
-The model classes cover the usual JSON shapes:
+`@JsonProperty("key")` renames a field in the output. `@JsonIgnore` leaves a field out.
 
-- `JsonPrimitive` holds a single value: `null`, a `String`, a `Number` or a `Boolean`.
-  Strings are escaped when printed.
-- `JsonObject` keeps its keys in insertion order. You can add or overwrite a key with
-  `setProperty`, read one with `getProperty`, remove one with `deleteProperty`, and walk
-  every entry with `visit`.
-- `JsonArray` holds a list of elements and lets you `add`, `remove`, `get`, ask for its
-  `size`, and `visit` each item.
-- `JsonReference` is how a repeated object is written, as `{"$ref": "<id>"}`.
+```kotlin
+class Task(
+    @JsonProperty("desc") val description: String,
+    @JsonIgnore val deadline: Date?,
+    @JsonProperty("deps") val dependencies: List<Task>
+)
 
-When `ProJson` serializes a regular class it writes a `$type` field with the class name
-and a `$id` field with a generated UUID. Data classes are treated as plain values, so
-they get a `$type` but no `$id`. ProJson tells the two apart by checking for the `copy`
-method that the Kotlin compiler only generates for data classes.
-
-Three annotations change how a class is written:
-
-- `@JsonIgnore` on a field leaves that field out of the output.
-- `@JsonProperty("name")` on a field uses a different key in the JSON.
-- `@JsonString` on a class serializes the whole object to a single string, using a
-  `JsonStringSerializer` you provide.
-
-A fourth annotation, `@Reference`, deals with shared objects. When a field is marked with
-it and the object it points to has already been written once, ProJson writes a `$ref` to
-that object's `$id` instead of repeating it. This also stops circular references from
-looping forever.
-
-## Spec coverage
-
-The pieces of the brief map onto the source files like this:
-
-- The in-memory model is in `JsonElement.kt`, `JsonObject.kt`, `JsonArray.kt` and
-  `JsonReference.kt`.
-- Reflection-based serialization and the data-class handling are in `ProJson.kt`.
-- The annotations and the `JsonStringSerializer` interface are in `Annotations.kt`.
-- References (`$id`, `$ref` and `@Reference`) are handled in `ProJson.kt` together with
-  `JsonReference.kt`.
-
-Each feature has matching tests under `src/test/kotlin/projson`.
-
-## Building and testing
-
-The project uses Gradle. To compile and run the tests:
-
-```
-./gradlew test
+val t = Task("T1", Date(30, 2, 2026), emptyList())
+println(ProJson().toJson(t).toJsonString())
 ```
 
-The tests are written with JUnit 5 and cover the model classes, the serializer, the
-annotations and the reference handling.
+```json
+{"$id": "…", "$type": "Task", "desc": "T1", "deps": []}
+```
+
+`description` prints as `desc`, `dependencies` prints as `deps`, and `deadline` is gone.
+
+`@JsonString` serializes a whole class to one string. Put it on the class and point it at
+a `JsonStringSerializer` that has a no-argument constructor.
+
+```kotlin
+class DateAsText : JsonStringSerializer {
+    override fun serialize(obj: Any): String {
+        val d = obj as Date
+        return "%02d/%02d/%04d".format(d.day, d.month, d.year)
+    }
+}
+
+@JsonString(DateAsText::class)
+data class Date(val day: Int, val month: Int, val year: Int)
+
+val json = ProJson().toJson(listOf(Date(30, 2, 2026), Date(31, 4, 2026)))
+println(json.toJsonString())
+```
+
+```json
+["30/02/2026", "31/04/2026"]
+```
+
+Each `Date` is now a string, so there is no `$type` and no nested object.
+
+## References between objects
+
+A graph where objects point at each other cannot be written as a plain tree without
+repeating data. Mark a field with `@Reference` and ProJson writes the target as
+`{"$ref": "<id>"}`, pointing at the `$id` the target already received.
+
+```kotlin
+class Task(
+    val description: String,
+    val deadline: Date?,
+    @Reference val dependencies: List<Task>
+)
+
+val t1 = Task("T1", Date(30, 2, 2026), emptyList())
+val t2 = Task("T2", Date(31, 4, 2026), emptyList())
+val t3 = Task("T3", null, listOf(t1, t2))
+println(ProJson().toJson(listOf(t1, t2, t3)).toJsonString())
+```
+
+`t1` and `t2` are written in full because they appear first in the list. Inside `t3`, the
+two dependencies are written as references to the ids that `t1` and `t2` already got:
+
+```json
+[…, {"$id": "<id-of-t3>", "$type": "Task", "description": "T3", "deadline": null, "dependencies": [{"$ref": "<id-of-t1>"}, {"$ref": "<id-of-t2>"}]}]
+```
+
+If two objects reference each other, the first one written goes into the registry before
+its fields are processed, so the second one writes a `$ref` back to it instead of
+recursing. A cycle therefore prints once and stops.
+
+## Reading the text
+
+Every node implements `toJsonString()`, and `toString()` returns the same text. The output
+is valid JSON on a single line; pretty-printing is not applied.
+
+## Architecture
+
+![ProJson package diagram](projson-diagram.svg)
+
+`JsonElement` is the shared interface. `JsonPrimitive`, `JsonObject`, `JsonArray`, and
+`JsonReference` implement it. `ProJson` reads a Kotlin object and produces those nodes,
+and the annotations (`@JsonIgnore`, `@JsonProperty`, `@JsonString`, `@Reference`) change
+what it produces.
+
+## Where each feature lives
+
+- Model nodes: `JsonElement.kt`, `JsonObject.kt`, `JsonArray.kt`, `JsonReference.kt`.
+- Reflection, `$type`/`$id`, and data-class handling: `ProJson.kt`.
+- Annotations and the `JsonStringSerializer` interface: `Annotations.kt`.
+- References (`@Reference`, `$ref`): `ProJson.kt` with `JsonReference.kt`.
+
+Tests for each of these are under `src/test/kotlin/projson`.
