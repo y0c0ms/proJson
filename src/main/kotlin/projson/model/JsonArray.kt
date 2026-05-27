@@ -1,4 +1,4 @@
-package projson
+package projson.model
 
 /**
  * A JSON array: `[elem1, elem2, ...]`. Elements keep the order in which they were added.

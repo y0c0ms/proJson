@@ -1,4 +1,4 @@
-package projson
+package projson.model
 
 /**
  * Common interface for every JSON node: [JsonPrimitive], [JsonObject], [JsonArray], and

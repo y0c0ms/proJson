@@ -1,4 +1,7 @@
-package projson
+package projson.test
+
+import projson.*
+import projson.model.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -113,5 +116,26 @@ class JsonObjectTest {
         val visited = mutableListOf<String>()
         obj.visit { key, _ -> visited.add(key) }
         assertEquals(listOf("x", "y"), visited)
+    }
+
+    @Test
+    fun `properties returns a read-only snapshot of all entries`() {
+        val obj = JsonObject()
+        obj.setProperty("a", 1)
+        obj.setProperty("b", "two")
+        val snapshot = obj.properties()
+        assertEquals(2, snapshot.size)
+        assertEquals(JsonPrimitive(1), snapshot["a"])
+        assertEquals(JsonPrimitive("two"), snapshot["b"])
+    }
+
+    @Test
+    fun `properties snapshot is decoupled from later mutations`() {
+        val obj = JsonObject()
+        obj.setProperty("a", 1)
+        val snapshot = obj.properties()
+        obj.setProperty("b", 2)
+        // The earlier snapshot must not reflect the new key.
+        assertEquals(setOf("a"), snapshot.keys)
     }
 }

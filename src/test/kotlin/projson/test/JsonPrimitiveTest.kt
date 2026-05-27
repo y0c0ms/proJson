@@ -1,4 +1,7 @@
-package projson
+package projson.test
+
+import projson.*
+import projson.model.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

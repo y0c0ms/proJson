@@ -1,5 +1,10 @@
 package projson
 
+import projson.model.JsonArray
+import projson.model.JsonElement
+import projson.model.JsonObject
+import projson.model.JsonPrimitive
+import projson.model.JsonReference
 import java.util.IdentityHashMap
 import java.util.UUID
 

@@ -1,4 +1,7 @@
-package projson
+package projson.test
+
+import projson.*
+import projson.model.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -103,5 +106,26 @@ class JsonArrayTest {
         val visited = mutableListOf<Int>()
         arr.visit { idx, _ -> visited.add(idx) }
         assertEquals(listOf(0, 1), visited)
+    }
+
+    @Test
+    fun `elements returns a read-only snapshot in order`() {
+        val arr = JsonArray()
+        arr.add("a")
+        arr.add(1)
+        val snapshot = arr.elements()
+        assertEquals(2, snapshot.size)
+        assertEquals(JsonPrimitive("a"), snapshot[0])
+        assertEquals(JsonPrimitive(1), snapshot[1])
+    }
+
+    @Test
+    fun `elements snapshot is decoupled from later mutations`() {
+        val arr = JsonArray()
+        arr.add("a")
+        val snapshot = arr.elements()
+        arr.add("b")
+        // The earlier snapshot must not reflect the new element.
+        assertEquals(1, snapshot.size)
     }
 }

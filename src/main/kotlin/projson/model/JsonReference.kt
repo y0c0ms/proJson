@@ -1,4 +1,4 @@
-package projson
+package projson.model
 
 /**
  * A reference to another object by its UUID. Prints as `{"$ref": "<id>"}`, where [id] is

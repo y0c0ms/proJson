@@ -1,4 +1,4 @@
-package projson
+package projson.model
 
 /**
  * A JSON object: `{"key": value, ...}`. Keys are kept in insertion order by the backing
