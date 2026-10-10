@@ -1,17 +1,21 @@
 # ProJson
 
-ProJson is a JSON library for Kotlin with no external dependencies (JUnit 5 is used only
-for the tests). It has two parts:
+ProJson is a Kotlin JSON library with no external dependencies that turns Kotlin objects into JSON text.
 
-- an in-memory model, where a JSON document is a tree of `JsonElement` nodes;
-- a serializer, `ProJson`, that turns a Kotlin object into that tree using reflection.
+## Features
+
+- An in-memory JSON model: `JsonObject`, `JsonArray`, `JsonPrimitive`, and `JsonReference` nodes.
+- `ProJson().toJson(value)`, a reflection-based serializer for maps, collections, and plain or data classes.
+- `$type` and `$id` metadata for regular classes; data classes get only `$type`.
+- Annotations: `@JsonProperty` renames a field, `@JsonIgnore` omits it, `@JsonString` writes a class as one string, and `@Reference` writes repeated or cyclic objects as `$ref`.
 
 Call `toJsonString()` on any node to get the JSON text. This document shows each public
 call and the exact text it produces.
 
-## Building and running
+## Run it
 
-The project uses the Gradle wrapper, so no local Gradle install is needed.
+The project uses the Gradle wrapper, so no local Gradle install is needed. The library has
+no runtime dependencies; the tests use `kotlin.test` on JUnit 5.
 
 ```
 ./gradlew build     # compile and run the tests
@@ -189,3 +193,8 @@ what it produces.
 - References (`@Reference`, `$ref`): `ProJson.kt` with `JsonReference.kt`.
 
 Tests for each of these are under `src/test/kotlin/projson`.
+
+## Course
+
+Group project for the Advanced Programming course, MEI 2026. The project specification is in
+`src/main/docs/`.
